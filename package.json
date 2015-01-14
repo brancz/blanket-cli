@@ -1,0 +1,9 @@
+{
+  "name": "blanket-cli",
+  "version": "0.0.1",
+  "devDependencies": {},
+  "dependencies": {
+    "commander": "^2.6.0",
+    "queue-async": "^1.0.7"
+  }
+}
