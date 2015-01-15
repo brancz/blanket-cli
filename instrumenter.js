@@ -5,7 +5,7 @@ var blkt = require('blanket')({
   'data-cover-customVariable': 'window._$blanket'
 });
 
-module.exports = function(verbose, quiet) {
+module.exports = function(verbose, quiet, debug) {
     function log(text) {
         if(verbose && !quiet) console.log(text);
     }
@@ -14,9 +14,9 @@ module.exports = function(verbose, quiet) {
         if(!quiet) console.warn(text);
     }
 
-    var q = queue(50);
+    var fileCount = 0;
 
-    function instrumentFile(target, verbose) {
+    function instrumentFile(target, counterObj) {
         var startTime = process.hrtime();
         blkt.restoreBlanketLoader();
         try {
@@ -26,37 +26,56 @@ module.exports = function(verbose, quiet) {
                     inputFile: fileContent,
                     inputFileName: target
                 }, function(instrumentedCode) {
-                    q.defer(function() {
-                        dir = path.dirname(target);
-                        newFileName = 'instrumented+' + path.basename(target);
-                        try {
-                            fs.writeFile(path.join(dir, newFileName), instrumentedCode);
-                            log('successfully instrumented ' + target);
-                        } catch(err) {
-                            warn(err);
-                        }
-                    });
+                    dir = path.dirname(target);
+                    newFileName = 'instrumented+' + path.basename(target);
+                    try {
+                        fs.writeFileSync(path.join(dir, newFileName), instrumentedCode);
+                        var endTime = process.hrtime(startTime);
+                        counterObj.files++;
+
+                        log('Successfully instrumented ' + target + " in " + endTime[0] + "s " + endTime[1] + "ns");
+                        log("Already instrumented " + counterObj.files + " file(s) in " + counterObj.dirs + " directory/directories");
+                    } catch(err) {
+                        warn(err);
+                        counterObj.failedFiles++;
+                    }
                 });
             } catch(err) {
-                warn('cannot instrument         ' + target);
+                warn("Cannot instrument '" + target + "': " + err);
+                counterObj.failedFiles++;
             }
         } catch(err) {
             warn(err);
+            counterObj.failedFiles++;
         }
     }
 
-    function instrumentDir(dir, recursive, verbose, quiet) {
+    function instrumentDir(dir, recursive) {
+        var counter = {
+            files: 0,
+            failedFiles: 0,
+            dirs: 0
+        };
+
+        instrumentDirRecursion(dir, recursive, counter);
+    }
+
+    function instrumentDirRecursion(dir, recursive, counterObj) {
+        counterObj.dirs++;
+
         filesInDir = fs.readdirSync(dir);
         filesInDir.forEach(function(file) {
             file = path.join(dir, file);
             var stat = fs.statSync(file);
-            if(stat.isDirectory()) {
-                instrumentDir(file, recursive, verbose);
+            if(stat.isDirectory() && recursive) {
+                instrumentDirRecursion(file, recursive, counterObj);
             }
             if(stat.isFile()) {
-                instrumentFile(file, verbose);
+                instrumentFile(file, counterObj);
             }
         });
+
+        console.log("Failed: " + counterObj.failedFiles);
     }
 
     this.instrumentDir  = instrumentDir;

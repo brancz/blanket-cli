@@ -4,13 +4,13 @@ var Instrument = require('./instrumenter');
 
 program
   .version('0.0.1')
-  .description('Instrument javascript code for coverage with blanket.js')
+  .description('Instrument javascript code for coverage analysis with blanket.js')
   .usage('[options] [target ...]')
   .option('-R, --recursive', 'Instrument a directory recursively')
   .option('-s, --separate [dir]', 'Separate instrumented files in different subdir')
-  .option('-d, --debug', 'Display time used for each file to instrument')
+  .option('-d, --debug', 'Display time used for overall processing. If used in combination with --verbose it display time used for each file to instrument')
   .option('-v, --verbose', 'Display some information on the current status')
-  .option('-q, --quiet', 'Surpress warnings and log output')
+  .option('-q, --quiet', 'Surpress warnings and log output');
 
 program.parse(process.argv);
 
@@ -31,7 +31,7 @@ if (!program.args.length) {
         } catch(error) {
             console.log('Omitting ' + target);
         }
-        var instrumenter = new Instrument(program.verbose, program.quiet)
+        var instrumenter = new Instrument(program.verbose, program.quiet, program.debug)
         if(stat.isDirectory()) {
             instrumenter.instrumentDir(target, program.recursive);
         }
