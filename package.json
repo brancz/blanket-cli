@@ -6,5 +6,9 @@
     "blanket": "^1.1.6",
     "commander": "^2.6.0",
     "queue-async": "^1.0.7"
-  }
+  },
+  "scripts": {
+    "start": "node cli.js"
+  },
+  "bin": "./cli.js"
 }
