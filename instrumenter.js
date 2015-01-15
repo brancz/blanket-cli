@@ -127,7 +127,7 @@ module.exports = function(prefix, verbose, quiet, debug) {
         if(!quiet) {
             console.log();
             console.log(clc.green("Successfully instrumented " + counter.files + " file(s)."));
-            console.log(clc.yellow("Skipped " + counter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves."));
+            console.log(clc.yellow("Skipped " + counter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves. They can be removed by running in --cleanup mode."));
             console.log(clc.red("Failed instrumenting " + counter.failedFiles + " file(s). Probably because they were no valid JavaScript files." + ((!debug) ? " Run in debug and verbose mode (-d -v or -dv) for more details." : "")));
         }
     }
