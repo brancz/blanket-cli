@@ -1,3 +1,8 @@
+if(require.main === module) {
+    console.log("This is just a module used by the main script. please call 'node cli' instead.");
+    process.exit(1);
+}
+
 var fs = require('fs');
 var path = require('path');
 var queue = require('queue-async');
