@@ -8,6 +8,7 @@ var blkt = require('blanket')({
 module.exports = function(prefix, verbose, quiet, debug) {
     this.instrumentDir  = instrumentDir;
     this.instrumentFile = instrumentFile;
+    this.cleanup = cleanup;
 
     function log(text) {
         if(verbose && !quiet) console.log(text);
@@ -18,6 +19,43 @@ module.exports = function(prefix, verbose, quiet, debug) {
     }
 
     var fileCount = 0;
+
+    function cleanup(target, recursive) {
+        function unlinkFile(target, counterObj) {
+            if (path.basename(target).indexOf(prefix) != 0) return;
+
+            try {
+                fs.unlinkSync(target);
+                counterObj.files++;
+            } catch (err) {
+                warn("Could not delete '" + target + "'");
+                counterObj.failedFiles++;
+            }
+        }
+
+        var counter = {
+            files: 0,
+            failedFiles: 0,
+            dirs: 0
+        };
+
+        try {
+            var stat = fs.statSync(target);
+        } catch(error) {
+            console.log('Omitting ' + target);
+            return;
+        }
+
+        if (stat.isFile()) {
+            unlinkFile(target, counter);
+            counter.dirs++;
+        }
+        if (stat.isDirectory()) {
+            traverseFileTree(target, recursive, unlinkFile, counter);
+        }
+
+        if (!quiet) console.log("Deleted " + counter.files + " file(s) in " + counter.dirs + " directory/directories. Could not delete " + counter.failedFiles + " file(s).");
+    }
 
     function instrumentFile(target, counterObj) {
         var startTime = process.hrtime();
@@ -60,12 +98,12 @@ module.exports = function(prefix, verbose, quiet, debug) {
             dirs: 0
         };
 
-        instrumentDirRecursion(dir, recursive, counter);
+        traverseFileTree(dir, recursive, instrumentFile, counter);
     
         if(!quiet) console.log("Failed instrumenting " + counter.failedFiles + " of " + counter.files + " file(s) in " + counter.dirs + " directory/directories");
     }
 
-    function instrumentDirRecursion(dir, recursive, counterObj) {
+    function traverseFileTree(dir, recursive, fileHandler, counterObj) {
         counterObj.dirs++;
 
         filesInDir = fs.readdirSync(dir);
@@ -73,10 +111,10 @@ module.exports = function(prefix, verbose, quiet, debug) {
             file = path.join(dir, file);
             var stat = fs.statSync(file);
             if(stat.isDirectory() && recursive) {
-                instrumentDirRecursion(file, recursive, counterObj);
+                traverseFileTree(file, recursive, fileHandler, counterObj);
             }
             if(stat.isFile()) {
-                instrumentFile(file, counterObj);
+                fileHandler(file, counterObj);
             }
         });
     }
