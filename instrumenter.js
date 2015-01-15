@@ -15,6 +15,13 @@ module.exports = function(prefix, verbose, quiet, debug) {
     this.instrumentFile = instrumentFile;
     this.cleanup = cleanup;
 
+    function blanketInitializer(target, fileContent, done) {
+        blkt.instrument({
+            inputFile: fileContent,
+            inputFileName: target
+        }, done);        
+    }
+
     function log(text) {
         if(verbose && !quiet) console.log(text);
     }
@@ -67,7 +74,7 @@ module.exports = function(prefix, verbose, quiet, debug) {
     }
 
     function isAlreadyInstrumentedFile(target) {
-        return (fs.existsSync(path.join(path.dirname(target, prefix, path.basename(target))))); 
+        return (fs.existsSync(path.join(path.dirname(target), prefix + path.basename(target)))); 
     }
 
     function instrumentFile(target, counterObj) {
@@ -81,10 +88,7 @@ module.exports = function(prefix, verbose, quiet, debug) {
         try {
             fileContent = fs.readFileSync(target, 'utf-8');
             try {
-                blkt.instrument({
-                    inputFile: fileContent,
-                    inputFileName: target
-                }, function(instrumentedCode) {
+                blanketInitializer(target, fileContent, function(instrumentedCode) {
                     dir = path.dirname(target);
                     newFileName = prefix + path.basename(target);
                     try {
