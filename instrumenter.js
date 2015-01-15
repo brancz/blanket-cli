@@ -22,7 +22,7 @@ module.exports = function(prefix, verbose, quiet, debug) {
 
     function cleanup(target, recursive) {
         function unlinkFile(target, counterObj) {
-            if (path.basename(target).indexOf(prefix) != 0) return;
+            if (!isInstrumentedFile(target)) return;
 
             try {
                 fs.unlinkSync(target);
@@ -57,7 +57,20 @@ module.exports = function(prefix, verbose, quiet, debug) {
         if (!quiet) console.log("Deleted " + counter.files + " file(s) in " + counter.dirs + " directory/directories. Could not delete " + counter.failedFiles + " file(s).");
     }
 
+    function isInstrumentedFile(target) {
+        return (path.basename(target).indexOf(prefix) == 0); 
+    }
+
+    function isAlreadyInstrumentedFile(target) {
+        return (fs.existsSync(path.join(path.dirname(target, prefix, path.basename(target))))); 
+    }
+
     function instrumentFile(target, counterObj) {
+        if (isAlreadyInstrumentedFile(target) || isInstrumentedFile(target)) {
+            counterObj.skippedFiles++;
+            return;
+        }
+
         var startTime = process.hrtime();
         blkt.restoreBlanketLoader();
         try {
@@ -95,12 +108,13 @@ module.exports = function(prefix, verbose, quiet, debug) {
         var counter = {
             files: 0,
             failedFiles: 0,
-            dirs: 0
+            dirs: 0,
+            skippedFiles: 0
         };
 
         traverseFileTree(dir, recursive, instrumentFile, counter);
     
-        if(!quiet) console.log("Failed instrumenting " + counter.failedFiles + " of " + counter.files + " file(s) in " + counter.dirs + " directory/directories");
+        if(!quiet) console.log("Failed instrumenting " + counter.failedFiles + " skipped " + counter.skippedFiles + " file(s), " + counter.files + " file(s) in " + counter.dirs + " directory/directories successfully instrumented");
     }
 
     function traverseFileTree(dir, recursive, fileHandler, counterObj) {
