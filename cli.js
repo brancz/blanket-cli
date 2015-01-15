@@ -1,6 +1,8 @@
 var program = require('commander');
 var fs = require('fs');
-var Instrument = require('./instrumenter');
+var Instrumenter = require('./instrumenter');
+
+const PREFIX = "instrumented-";
 
 program
   .version('0.0.1')
@@ -31,7 +33,7 @@ if (!program.args.length) {
         } catch(error) {
             console.log('Omitting ' + target);
         }
-        var instrumenter = new Instrument(program.verbose, program.quiet, program.debug)
+        var instrumenter = new Instrumenter(PREFIX, program.verbose, program.quiet, program.debug)
         if(stat.isDirectory()) {
             instrumenter.instrumentDir(target, program.recursive);
         }

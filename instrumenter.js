@@ -5,7 +5,10 @@ var blkt = require('blanket')({
   'data-cover-customVariable': 'window._$blanket'
 });
 
-module.exports = function(verbose, quiet, debug) {
+module.exports = function(prefix, verbose, quiet, debug) {
+    this.instrumentDir  = instrumentDir;
+    this.instrumentFile = instrumentFile;
+
     function log(text) {
         if(verbose && !quiet) console.log(text);
     }
@@ -27,7 +30,7 @@ module.exports = function(verbose, quiet, debug) {
                     inputFileName: target
                 }, function(instrumentedCode) {
                     dir = path.dirname(target);
-                    newFileName = 'instrumented+' + path.basename(target);
+                    newFileName = prefix + path.basename(target);
                     try {
                         fs.writeFileSync(path.join(dir, newFileName), instrumentedCode);
                         var endTime = process.hrtime(startTime);
@@ -58,6 +61,8 @@ module.exports = function(verbose, quiet, debug) {
         };
 
         instrumentDirRecursion(dir, recursive, counter);
+    
+        if(!quiet) console.log("Failed instrumenting " + counter.failedFiles + " of " + counter.files + " file(s) in " + counter.dirs + " directory/directories");
     }
 
     function instrumentDirRecursion(dir, recursive, counterObj) {
@@ -74,10 +79,5 @@ module.exports = function(verbose, quiet, debug) {
                 instrumentFile(file, counterObj);
             }
         });
-
-        console.log("Failed: " + counterObj.failedFiles);
     }
-
-    this.instrumentDir  = instrumentDir;
-    this.instrumentFile = instrumentFile;
 };
