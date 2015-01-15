@@ -6,6 +6,7 @@ if(require.main === module) {
 var fs = require('fs');
 var path = require('path');
 var queue = require('queue-async');
+var clc = require('cli-color');
 var blkt = require('blanket')({
   'data-cover-customVariable': 'window._$blanket'
 });
@@ -18,7 +19,7 @@ module.exports = function(prefix, verbose, quiet, debug) {
     function blanketInitializer(target, fileContent, done) {
         blkt.instrument({
             inputFile: fileContent,
-            inputFileName: target
+            inputFileName: path.basename(target)
         }, done);        
     }
 
@@ -104,7 +105,7 @@ module.exports = function(prefix, verbose, quiet, debug) {
                     }
                 });
             } catch(err) {
-                warn("Cannot instrument '" + target + "': " + err);
+                warn(clc.red("Cannot instrument '" + target + "': " + err));
                 counterObj.failedFiles++;
             }
         } catch(err) {
@@ -123,7 +124,12 @@ module.exports = function(prefix, verbose, quiet, debug) {
 
         traverseFileTree(dir, recursive, instrumentFile, counter);
     
-        if(!quiet) console.log("Failed instrumenting " + counter.failedFiles + " skipped " + counter.skippedFiles + " file(s), " + counter.files + " file(s) in " + counter.dirs + " directory/directories successfully instrumented");
+        if(!quiet) {
+            console.log();
+            console.log(clc.green("Successfully instrumented " + counter.files + " file(s)."));
+            console.log(clc.yellow("Skipped " + counter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves."));
+            console.log(clc.red("Failed instrumenting " + counter.failedFiles + " file(s). Probably because they were no valid JavaScript files." + ((!debug) ? " Run in debug and verbose mode (-d -v or -dv) for more details." : "")));
+        }
     }
 
     function traverseFileTree(dir, recursive, fileHandler, counterObj) {
