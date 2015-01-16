@@ -3,11 +3,12 @@
 var program = require('commander');
 var fs = require('fs');
 var Instrumenter = require('./instrumenter');
+var package = require('./package.json');
 
 const PREFIX = "instrumented-";
 
 program
-  .version('0.0.1')
+  .version(package.version)
   .description('Instrument javascript code for coverage analysis with blanket.js')
   .usage('[options] [target ...]')
   .option('-R, --recursive', 'Instrument a directory recursively')
