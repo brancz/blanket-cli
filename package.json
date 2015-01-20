@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "devDependencies": {},
   "dependencies": {
-    "blanket": "^1.1.6",
+    "blanket": "git+https://github.com/FlorianLoch/blanket.git",
     "cli-color": "^0.3.2",
     "commander": "^2.6.0"
   },
