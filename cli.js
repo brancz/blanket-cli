@@ -39,6 +39,8 @@ if (!program.args.length) {
             console.log('Omitting ' + target);
             return;
         }
+        program.quiet = program.quit || false;
+
         var instrumenter = new Instrumenter(PREFIX, program.verbose, program.quiet, program.debug)
 
         if (program.cleanup) {

@@ -77,8 +77,7 @@ module.exports = function(prefix, verbose, quiet, debug) {
 
     function instrumentFile(target, counterObj) {
         var childProcess = require("child_process");
-        var fork = childProcess.fork("instrumenter.child.js");
-        fork.send("instrumentFile");
+        var fork = childProcess.fork("instrumenter.child.js", [target, verbose, quiet, prefix]);
     }
 
     function instrumentDir(dir, recursive) {

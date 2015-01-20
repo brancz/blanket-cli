@@ -1,9 +1,8 @@
 console.log("Child " + process.argv[2] + " launched!");
 
-process.on("message", function(msg, target, counterObj) {
-    if (msg === "instrumentFile") {
-        instrumentFile(target, counterObj);
-    }
+process.on("message", function (msg, obj) {
+	console.log(msg);
+	obj.counter++;
 });
 
 setTimeout(function () {
