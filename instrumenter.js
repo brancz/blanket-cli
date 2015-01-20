@@ -1,3 +1,5 @@
+Error.stackTraceLimit = Infinity;
+
 if(require.main === module) {
     console.log("This is just a module used by the main script. please call 'node cli' instead.");
     process.exit(1);
@@ -5,7 +7,6 @@ if(require.main === module) {
 
 var fs = require('fs');
 var path = require('path');
-var queue = require('queue-async');
 var clc = require('cli-color');
 var blkt = require('blanket')({
   'data-cover-customVariable': 'window._$blanket'

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+Error.stackTraceLimit = Infinity;
 
 var program = require('commander');
 var fs = require('fs');
