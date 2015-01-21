@@ -53,13 +53,6 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         }
     });
 
-    function blanketInitializer(target, fileContent, done) {
-        blkt.instrument({
-            inputFile: fileContent,
-            inputFileName: path.basename(target)
-        }, done);        
-    }
-
     function log(text) {
         if(verbose && !quiet) console.log(text);
     }
@@ -104,7 +97,12 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
             traverseFileTree(target, recursive, unlinkFile, counter);
         }
 
-        if (!quiet) console.log("Deleted " + counter.files + " file(s) in " + counter.dirs + " directory/directories. Could not delete " + counter.failedFiles + " file(s).");
+        if (!quiet) {
+            console.log(clc.green("Deleted " + counter.files + " file(s) in " + counter.dirs + " directory/directories."));
+            if (counter.failedFiles > 0 || debug || verbose) {
+                console.log(clc.red("Could not delete " + counter.failedFiles + " file(s)."));
+            }
+        }
     }
 
     function isInstrumentedFile(target) {
