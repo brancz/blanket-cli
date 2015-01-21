@@ -10,11 +10,20 @@ var blkt = require('blanket')({
     'data-cover-customVariable': 'window._$blanket'
 });
 
-var verbose = (process.argv[3] == "true");
-var quiet = (process.argv[4] == "true");
-var prefix = process.argv[5];
+// var verbose = (process.argv[3] == "true");
+// var quiet = (process.argv[4] == "true");
+var prefix;
 
-instrumentFile(process.argv[2]);
+process.on("message", function (msg) {
+    if (msg.message === "doThisWork") {
+        prefix = msg.args[3];
+        instrumentFile(msg.args[0]);
+
+        process.send("giveMeMoreWork");
+    }
+});
+
+process.send("giveMeWork");
 
 function blanketInitializer(target, fileContent, done) {
     blkt.instrument({

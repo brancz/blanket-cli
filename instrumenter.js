@@ -9,17 +9,18 @@ var fs = require('fs');
 var path = require('path');
 var clc = require('cli-color');
 var ForkQueueManager = require("./fork_queue_manager");
-var q = new ForkQueueManager(4, "./instrumenter.child.js");
 var scriptWideCounter; 
 
 var blkt = require('blanket')({
     "data-cover-customVariable": "window._$blanket"
 }); //Seems to do strange things like overriding "require"
 
-module.exports = function(prefix, verbose, quiet, debug) {
+module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentDir  = instrumentDir;
     this.instrumentFile = instrumentFile;
     this.cleanup = cleanup;
+
+    var q = new ForkQueueManager(parallelism, "./instrumenter.child.js");
 
     q.on("jobMessage", function (msg, jobsDoneCount) {
         if (msg.state === "skipped") {
