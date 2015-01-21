@@ -31,13 +31,15 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         if (msg.state === "success") {
             scriptWideCounter.files++;
             log('Successfully instrumented ' + msg.file + " in " + msg.duration[0] + "s " + msg.duration[1] + "ns");
-            log("Already instrumented " + scriptWideCounter.files + " file(s) in " + scriptWideCounter.dirs + " directory/directories");            
+            log("Instrumented " + scriptWideCounter.files + " file(s) in " + scriptWideCounter.dirs + " directory/directories"); 
+
             return;
         }
 
         if (msg.state === "failure") {
             scriptWideCounter.failedFiles++;
-            warn(clc.red("Cannot instrument '" + msg.file + "': " + msg.error.message));
+
+            warn(clc.red("Cannot instrument '" + msg.file + "': " + msg.error));
             return;
         }
     });
@@ -110,7 +112,10 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     }
 
     function instrumentFile(target) {
-        q.addJob([target, verbose, quiet, prefix]);
+        q.addJob({
+            file: target, 
+            prefix: prefix
+        });
     }
 
     function instrumentDir(dir, recursive) {

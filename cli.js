@@ -18,7 +18,7 @@ program
   .option('-d, --debug', 'Display time used for overall processing. If used in combination with --verbose it display time used for each file to instrument')
   .option('-v, --verbose', 'Display some information on the current status')
   .option('-q, --quiet', 'Surpress warnings and log output')
-  .option('-p, --parallelism <forks>', 'Spread work over n parallel processes', os.cpus().length)
+  .option('-p, --parallelism <forks>', 'Spread work over n parallel processes (defaults to amount of available cpu cores)', os.cpus().length)
   .option("--cleanup", "Removes all files in the given targets starting with '" + PREFIX + "'");  
 
 program.parse(process.argv);

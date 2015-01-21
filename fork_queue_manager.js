@@ -42,18 +42,15 @@ ForkQueueManager.prototype._getNextArgs = function () {
 ForkQueueManager.prototype._launchFork = function () {
   var self = this;
 
-  var args = this._getNextArgs();
-
-  if (args === undefined) {
+  if (this.jobArgs.length === 0) {
     return;
   };  
 
   this.currentForksCount++;
 
-  var fork = cP.fork(this.modulePath, args);
+  var fork = cP.fork(this.modulePath);
 
   fork.on("exit", function (code) {
-    console.log("forkDied");
 
     self.currentForksCount--;
 
@@ -61,7 +58,7 @@ ForkQueueManager.prototype._launchFork = function () {
       self.emit("forkDied", code);      
       self._launchFork();
     }
-
+    
     if (self.currentForksCount === 0 && self.jobArgs.length === 0) {
       self.emit("allJobsEnded", self.jobsDoneCount);
     }
@@ -92,8 +89,6 @@ ForkQueueManager.prototype._giveForkWork = function (fork, moreWork) {
     fork.kill();
     return;
   }
-
-  this.currentForksCount++;
 
   fork.send({
     message: "doThisWork",
