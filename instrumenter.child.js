@@ -6,7 +6,6 @@ Error.stackTraceLimit = Infinity;
 // }
 var fs = require('fs');
 var path = require('path');
-var clc = require('cli-color');
 var blkt = require('blanket')({
     'data-cover-customVariable': 'window._$blanket'
 });
@@ -15,11 +14,6 @@ var verbose = (process.argv[3] == "true");
 var quiet = (process.argv[4] == "true");
 var prefix = process.argv[5];
 
-// process.on("message", function(msg, target, counterObj) {
-//     if (msg === "instrumentFile") {
-//         instrumentFile(target, counterObj);
-//     }
-// });
 instrumentFile(process.argv[2]);
 
 function blanketInitializer(target, fileContent, done) {
@@ -29,13 +23,8 @@ function blanketInitializer(target, fileContent, done) {
     }, done);
 }
 
-function log(text) {
-    if(verbose && !quiet) console.log(text);
-}
-
-function warn(text) {
-    console.log(typeof quiet);
-    if(!quiet) console.warn(text);
+function send(msg) {
+    process.send(msg);
 }
 
 function isInstrumentedFile(target) {
@@ -48,8 +37,10 @@ function isAlreadyInstrumentedFile(target) {
 
 function instrumentFile(target) {
     if (isAlreadyInstrumentedFile(target) || isInstrumentedFile(target)) {
-        //counterObj.skippedFiles++;
-        console.log("Skipped");
+        send({
+            state: "skipped",
+            file: target
+        });
         return;
     }
 
@@ -64,21 +55,32 @@ function instrumentFile(target) {
                 try {
                     fs.writeFileSync(path.join(dir, newFileName), instrumentedCode);
                     var endTime = process.hrtime(startTime);
-                    //counterObj.files++;
 
-                    log('Successfully instrumented ' + target + " in " + endTime[0] + "s " + endTime[1] + "ns");
-                    log("Already instrumented " + counterObj.files + " file(s) in " + counterObj.dirs + " directory/directories");
+                    send({
+                        state: "success",
+                        file: target,
+                        duration: endTime
+                    });
                 } catch (err) {
-                    warn(err);
-                    //counterObj.failedFiles++;
+                    send({
+                        state: "failure",
+                        file: target,
+                        error: err
+                    });
                 }
             });
         } catch (err) {
-            warn(clc.red("Cannot instrument '" + target + "': " + err));
-            //counterObj.failedFiles++;
+            send({
+                state: "failure",
+                file: target,
+                error: err
+            });
         }
     } catch (err) {
-        warn(err);
-        //counterObj.failedFiles++;
+        send({
+            state: "failure",
+            file: target,
+            error: err
+        });
     }
 }

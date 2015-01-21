@@ -8,14 +8,47 @@ if(require.main === module) {
 var fs = require('fs');
 var path = require('path');
 var clc = require('cli-color');
+var ForkQueueManager = require("./fork_queue_manager");
+var q = new ForkQueueManager(4, "./instrumenter.child.js");
+var scriptWideCounter; 
+
 var blkt = require('blanket')({
-  'data-cover-customVariable': 'window._$blanket'
-});
+    "data-cover-customVariable": "window._$blanket"
+}); //Seems to do strange things like overriding "require"
 
 module.exports = function(prefix, verbose, quiet, debug) {
     this.instrumentDir  = instrumentDir;
     this.instrumentFile = instrumentFile;
     this.cleanup = cleanup;
+
+    q.on("jobMessage", function (msg, jobsDoneCount) {
+        if (msg.state === "skipped") {
+            scriptWideCounter.skippedFiles++;
+            return;
+        }
+
+        if (msg.state === "success") {
+            scriptWideCounter.files++;
+            log('Successfully instrumented ' + msg.file + " in " + msg.duration[0] + "s " + msg.duration[1] + "ns");
+            log("Already instrumented " + scriptWideCounter.files + " file(s) in " + scriptWideCounter.dirs + " directory/directories");            
+            return;
+        }
+
+        if (msg.state === "failure") {
+            scriptWideCounter.failedFiles++;
+            warn(clc.red("Cannot instrument '" + msg.file + "': " + msg.error.message));
+            return;
+        }
+    });
+
+    q.on("allJobsEnded", function (jobsDoneCount) {
+        if(!quiet) {
+            console.log();
+            console.log(clc.green("Successfully instrumented " + scriptWideCounter.files + " file(s)."));
+            console.log(clc.yellow("Skipped " + scriptWideCounter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves. They can be removed by running in --cleanup mode."));
+            console.log(clc.red("Failed instrumenting " + scriptWideCounter.failedFiles + " file(s). Probably because they were no valid JavaScript files." + ((!debug) ? " Run in debug and verbose mode (-d -v or -dv) for more details." : "")));
+        }
+    });
 
     function blanketInitializer(target, fileContent, done) {
         blkt.instrument({
@@ -75,9 +108,8 @@ module.exports = function(prefix, verbose, quiet, debug) {
         return (path.basename(target).indexOf(prefix) == 0); 
     }
 
-    function instrumentFile(target, counterObj) {
-        var childProcess = require("child_process");
-        var fork = childProcess.fork("instrumenter.child.js", [target, verbose, quiet, prefix]);
+    function instrumentFile(target) {
+        q.addJob([target, verbose, quiet, prefix]);
     }
 
     function instrumentDir(dir, recursive) {
@@ -88,14 +120,11 @@ module.exports = function(prefix, verbose, quiet, debug) {
             skippedFiles: 0
         };
 
+        scriptWideCounter = counter;
+
         traverseFileTree(dir, recursive, instrumentFile, counter);
-    
-        if(!quiet) {
-            console.log();
-            console.log(clc.green("Successfully instrumented " + counter.files + " file(s)."));
-            console.log(clc.yellow("Skipped " + counter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves. They can be removed by running in --cleanup mode."));
-            console.log(clc.red("Failed instrumenting " + counter.failedFiles + " file(s). Probably because they were no valid JavaScript files." + ((!debug) ? " Run in debug and verbose mode (-d -v or -dv) for more details." : "")));
-        }
+
+        q.start();
     }
 
     function traverseFileTree(dir, recursive, fileHandler, counterObj) {
