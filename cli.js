@@ -29,7 +29,7 @@ if (!program.args.length) {
     process.on('exit', function(code) {
         var time = process.hrtime(global.startTime);
         if(program.debug) {
-            console.log(time[0] + 's ' + time[1] + 'ns execution time');
+            console.log("Overall time needed for execution: " + time[0] + 's ' + time[1] + 'ns');
         }
     });
 
