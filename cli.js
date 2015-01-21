@@ -3,6 +3,7 @@ Error.stackTraceLimit = Infinity;
 
 var program = require('commander');
 var fs = require('fs');
+var os = require("os");
 var Instrumenter = require('./instrumenter');
 var package = require('./package.json');
 
@@ -17,6 +18,7 @@ program
   .option('-d, --debug', 'Display time used for overall processing. If used in combination with --verbose it display time used for each file to instrument')
   .option('-v, --verbose', 'Display some information on the current status')
   .option('-q, --quiet', 'Surpress warnings and log output')
+  .option('-p, --parallelism <forks>', 'Spread work over n parallel processes (defaults to amount of available cpu cores)', os.cpus().length)
   .option("--cleanup", "Removes all files in the given targets starting with '" + PREFIX + "'");  
 
 program.parse(process.argv);
@@ -39,7 +41,9 @@ if (!program.args.length) {
             console.log('Omitting ' + target);
             return;
         }
-        var instrumenter = new Instrumenter(PREFIX, program.verbose, program.quiet, program.debug)
+        program.quiet = program.quiet || false;
+
+        var instrumenter = new Instrumenter(PREFIX, program.verbose, program.quiet, program.debug, program.parallelism);
 
         if (program.cleanup) {
             instrumenter.cleanup(target);

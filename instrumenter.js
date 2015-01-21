@@ -8,21 +8,50 @@ if(require.main === module) {
 var fs = require('fs');
 var path = require('path');
 var clc = require('cli-color');
-var blkt = require('blanket')({
-  'data-cover-customVariable': 'window._$blanket'
-});
+var ForkQueueManager = require("./fork_queue_manager");
+var scriptWideCounter; 
 
-module.exports = function(prefix, verbose, quiet, debug) {
+var blkt = require('blanket')({
+    "data-cover-customVariable": "window._$blanket"
+}); //Seems to do strange things like overriding "require"
+
+module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentDir  = instrumentDir;
     this.instrumentFile = instrumentFile;
     this.cleanup = cleanup;
 
-    function blanketInitializer(target, fileContent, done) {
-        blkt.instrument({
-            inputFile: fileContent,
-            inputFileName: path.basename(target)
-        }, done);        
-    }
+    var q = new ForkQueueManager(parallelism, "./instrumenter.child.js");
+
+    q.on("jobMessage", function (msg, jobsDoneCount) {
+        if (msg.state === "skipped") {
+            scriptWideCounter.skippedFiles++;
+            return;
+        }
+
+        if (msg.state === "success") {
+            scriptWideCounter.files++;
+            log('Successfully instrumented ' + msg.file + " in " + msg.duration[0] + "s " + msg.duration[1] + "ns");
+            log("Instrumented " + scriptWideCounter.files + " file(s) in " + scriptWideCounter.dirs + " directory/directories"); 
+
+            return;
+        }
+
+        if (msg.state === "failure") {
+            scriptWideCounter.failedFiles++;
+
+            warn(clc.red("Cannot instrument '" + msg.file + "': " + msg.error));
+            return;
+        }
+    });
+
+    q.on("allJobsEnded", function (jobsDoneCount) {
+        if(!quiet) {
+            console.log();
+            console.log(clc.green("Successfully instrumented " + scriptWideCounter.files + " file(s)."));
+            console.log(clc.yellow("Skipped " + scriptWideCounter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves. They can be removed by running in --cleanup mode."));
+            console.log(clc.red("Failed instrumenting " + scriptWideCounter.failedFiles + " file(s). Probably because they were no valid JavaScript files." + ((!debug) ? " Run in debug and verbose mode (-d -v or -dv) for more details." : "")));
+        }
+    });
 
     function log(text) {
         if(verbose && !quiet) console.log(text);
@@ -68,51 +97,23 @@ module.exports = function(prefix, verbose, quiet, debug) {
             traverseFileTree(target, recursive, unlinkFile, counter);
         }
 
-        if (!quiet) console.log("Deleted " + counter.files + " file(s) in " + counter.dirs + " directory/directories. Could not delete " + counter.failedFiles + " file(s).");
+        if (!quiet) {
+            console.log(clc.green("Deleted " + counter.files + " file(s) in " + counter.dirs + " directory/directories."));
+            if (counter.failedFiles > 0 || debug || verbose) {
+                console.log(clc.red("Could not delete " + counter.failedFiles + " file(s)."));
+            }
+        }
     }
 
     function isInstrumentedFile(target) {
         return (path.basename(target).indexOf(prefix) == 0); 
     }
 
-    function isAlreadyInstrumentedFile(target) {
-        return (fs.existsSync(path.join(path.dirname(target), prefix + path.basename(target)))); 
-    }
-
-    function instrumentFile(target, counterObj) {
-        if (isAlreadyInstrumentedFile(target) || isInstrumentedFile(target)) {
-            counterObj.skippedFiles++;
-            return;
-        }
-
-        var startTime = process.hrtime();
-        blkt.restoreBlanketLoader();
-        try {
-            fileContent = fs.readFileSync(target, 'utf-8');
-            try {
-                blanketInitializer(target, fileContent, function(instrumentedCode) {
-                    dir = path.dirname(target);
-                    newFileName = prefix + path.basename(target);
-                    try {
-                        fs.writeFileSync(path.join(dir, newFileName), instrumentedCode);
-                        var endTime = process.hrtime(startTime);
-                        counterObj.files++;
-
-                        log('Successfully instrumented ' + target + " in " + endTime[0] + "s " + endTime[1] + "ns");
-                        log("Already instrumented " + counterObj.files + " file(s) in " + counterObj.dirs + " directory/directories");
-                    } catch(err) {
-                        warn(err);
-                        counterObj.failedFiles++;
-                    }
-                });
-            } catch(err) {
-                warn(clc.red("Cannot instrument '" + target + "': " + err));
-                counterObj.failedFiles++;
-            }
-        } catch(err) {
-            warn(err);
-            counterObj.failedFiles++;
-        }
+    function instrumentFile(target) {
+        q.addJob({
+            file: target, 
+            prefix: prefix
+        });
     }
 
     function instrumentDir(dir, recursive) {
@@ -123,14 +124,11 @@ module.exports = function(prefix, verbose, quiet, debug) {
             skippedFiles: 0
         };
 
+        scriptWideCounter = counter;
+
         traverseFileTree(dir, recursive, instrumentFile, counter);
-    
-        if(!quiet) {
-            console.log();
-            console.log(clc.green("Successfully instrumented " + counter.files + " file(s)."));
-            console.log(clc.yellow("Skipped " + counter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves. They can be removed by running in --cleanup mode."));
-            console.log(clc.red("Failed instrumenting " + counter.failedFiles + " file(s). Probably because they were no valid JavaScript files." + ((!debug) ? " Run in debug and verbose mode (-d -v or -dv) for more details." : "")));
-        }
+
+        q.start();
     }
 
     function traverseFileTree(dir, recursive, fileHandler, counterObj) {
