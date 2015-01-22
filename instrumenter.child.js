@@ -11,7 +11,7 @@ process.on("message", function (msg) {
     if (msg.message === "doThisWork") {
         instrumentFile(msg.args.file, msg.args.prefix);
 
-        if (Math.random()
+        if (Math.random() < 0.1) process.exit();
 
         process.send("giveMeMoreWork");
     }

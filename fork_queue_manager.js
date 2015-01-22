@@ -1,6 +1,6 @@
-var cP = require('child_process');
-var util = require('util');
-var EventEmitter = require('events').EventEmitter;
+var cP = require("child_process");
+var util = require("util");
+var EventEmitter = require("events").EventEmitter;
 
 //emits: forkDied(result), allJobsEnded(jobsDoneCount), jobMessage(message, jobsDoneCount)
  
@@ -54,13 +54,20 @@ ForkQueueManager.prototype._launchFork = function () {
   this.currentForksCount++;
 
   var fork = cP.fork(this.modulePath);
+  var thisForksCurrentJob;
 
   fork.on("exit", function (code) {
 
     self.currentForksCount--;
 
     if (!self.workIsDone) {
-      self.emit("forkDied", code);      
+      self.emit("forkDied", code);     
+      console.log("Fork died - requeueing its job:");
+      console.log(thisForksCurrentJob);       
+      if (thisForksCurrentJob !== undefined) {
+        self.addJob(thisForksCurrentJob);
+        thisForksCurrentJob = undefined;
+      }
       self._launchFork();
     }
     
@@ -71,12 +78,12 @@ ForkQueueManager.prototype._launchFork = function () {
 
   fork.on("message", function (msg) {
     if (msg === "giveMeWork") {
-      self._giveForkWork(fork, false);
+      thisForksCurrentJob = self._giveForkWork(fork, false);
       return;
     }
 
     if (msg === "giveMeMoreWork") {
-      self._giveForkWork(fork, true)
+      thisForksCurrentJob = self._giveForkWork(fork, true)
       return;
     }    
 
@@ -99,6 +106,8 @@ ForkQueueManager.prototype._giveForkWork = function (fork, moreWork) {
     message: "doThisWork",
     args: nextArgs
   });
+
+  return nextArgs;
 }
 
 module.exports = ForkQueueManager;
