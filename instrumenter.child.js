@@ -2,16 +2,14 @@ Error.stackTraceLimit = Infinity;
 
 var fs = require('fs');
 var path = require('path');
+var common = require("./instrumenter.common.js");
 var blkt = require('blanket')({
     'data-cover-customVariable': 'window._$blanket'
 });
 
-var prefix;
-
 process.on("message", function (msg) {
     if (msg.message === "doThisWork") {
-        prefix = msg.args.prefix;
-        instrumentFile(msg.args.file);
+        instrumentFile(msg.args.file, msg.args.prefix);
 
         process.send("giveMeMoreWork");
     }
@@ -30,16 +28,8 @@ function send(msg) {
     process.send(msg);
 }
 
-function isInstrumentedFile(target) {
-    return (path.basename(target).indexOf(prefix) == 0); 
-}
-
-function isAlreadyInstrumentedFile(target) {
-    return (fs.existsSync(path.join(path.dirname(target), prefix + path.basename(target)))); 
-}
-
-function instrumentFile(target) {
-    if (isAlreadyInstrumentedFile(target) || isInstrumentedFile(target)) {
+function instrumentFile(target, prefix) {
+    if (common.isAlreadyInstrumentedFile(target, prefix) || common.isInstrumentedFile(target, prefix)) {
         send({
             state: "skipped",
             file: target

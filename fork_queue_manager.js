@@ -21,13 +21,18 @@ ForkQueueManager.prototype.addJob = function (args) {
   this.jobArgs.push(args);
 }
 
+ForkQueueManager.prototype.resetQueue = function () {
+  this.jobArgs = [];
+}
+
 ForkQueueManager.prototype.start = function () {
   if (this.running) {
     throw new Error("ForkQueueManager instance has already been started.");
   }
 
-  //this.currentForksCount = 0;
-  //this.jobsDoneCount = 0;
+  this.currentForksCount = 0;
+  this.jobsDoneCount = 0;
+  this.workIsDone = false;
   this.running = true;
 
   for (var i = 0; i < this.numForks; i++) {

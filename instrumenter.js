@@ -8,12 +8,9 @@ if(require.main === module) {
 var fs = require('fs');
 var path = require('path');
 var clc = require('cli-color');
-var ForkQueueManager = require("./fork_queue_manager");
+var ForkQueueManager = require(path.join(__dirname, "fork_queue_manager"));
 var scriptWideCounter; 
-
-var blkt = require('blanket')({
-    "data-cover-customVariable": "window._$blanket"
-}); //Seems to do strange things like overriding "require"
+var common = require(path.join(__dirname, "instrumenter.common.js"));
 
 module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentDir  = instrumentDir;
@@ -65,7 +62,7 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
 
     function cleanup(target, recursive) {
         function unlinkFile(target, counterObj) {
-            if (!isInstrumentedFile(target)) return;
+            if (!common.isInstrumentedFile(target, prefix)) return;
 
             try {
                 fs.unlinkSync(target);
@@ -103,10 +100,6 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
                 console.log(clc.red("Could not delete " + counter.failedFiles + " file(s)."));
             }
         }
-    }
-
-    function isInstrumentedFile(target) {
-        return (path.basename(target).indexOf(prefix) == 0); 
     }
 
     function instrumentFile(target) {
