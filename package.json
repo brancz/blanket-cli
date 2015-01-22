@@ -4,6 +4,7 @@
   "devDependencies": {},
   "dependencies": {
     "blanket": "git+https://github.com/FlorianLoch/blanket.git",
+    "reusable-forks-queue": "git+https://github.com/FlorianLoch/reusable-forks-queue.git",
     "cli-color": "^0.3.2",
     "commander": "^2.6.0"
   },

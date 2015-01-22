@@ -57,4 +57,3 @@ if (!program.args.length) {
         }
     });
 }
-

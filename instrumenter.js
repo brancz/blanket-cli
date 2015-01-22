@@ -8,7 +8,7 @@ if(require.main === module) {
 var fs = require('fs');
 var path = require('path');
 var clc = require('cli-color');
-var ForkQueueManager = require(path.join(__dirname, "fork_queue_manager"));
+var ReusableForksQueue = require("reusable-forks-queue");
 var scriptWideCounter; 
 var common = require(path.join(__dirname, "instrumenter.common.js"));
 
@@ -17,7 +17,7 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentFile = instrumentFile;
     this.cleanup = cleanup;
 
-    var q = new ForkQueueManager(parallelism, path.join(__dirname, "instrumenter.child.js"));
+    var q = new ReusableForksQueue(path.join(__dirname, "instrumenter.child.js"), parallelism);
 
     q.on("jobMessage", function (msg, jobsDoneCount) {
         if (msg.state === "skipped") {
