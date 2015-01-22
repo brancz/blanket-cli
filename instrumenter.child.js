@@ -2,7 +2,7 @@ Error.stackTraceLimit = Infinity;
 
 var fs = require('fs');
 var path = require('path');
-var common = require("./instrumenter.common.js");
+var common = require(path.join(__dirname, "instrumenter.common.js"));
 var blkt = require('blanket')({
     'data-cover-customVariable': 'window._$blanket'
 });
@@ -10,6 +10,8 @@ var blkt = require('blanket')({
 process.on("message", function (msg) {
     if (msg.message === "doThisWork") {
         instrumentFile(msg.args.file, msg.args.prefix);
+
+        if (Math.random()
 
         process.send("giveMeMoreWork");
     }
