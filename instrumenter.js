@@ -17,7 +17,7 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentFile = instrumentFile;
     this.cleanup = cleanup;
 
-    var q = new ForkQueueManager(parallelism, "./instrumenter.child.js");
+    var q = new ForkQueueManager(parallelism, path.join(__dirname, "instrumenter.child.js"));
 
     q.on("jobMessage", function (msg, jobsDoneCount) {
         if (msg.state === "skipped") {
