@@ -55,20 +55,20 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     }
 
     function warn(text) {
-        if(!quiet) console.warn(text);
+        if(!quiet) console.warn(clc.yellow(text));
     }
 
     var fileCount = 0;
 
-    function cleanup(target, recursive) {
-        function unlinkFile(target, counterObj) {
+    function cleanup(target, separateDir, recursive) {
+        function unlinkFile(target, pathTrace, counterObj) {
             if (!common.isInstrumentedFile(target, prefix)) return;
 
             try {
                 fs.unlinkSync(target);
                 counterObj.files++;
             } catch (err) {
-                warn("Could not delete '" + target + "'");
+                log("Could not delete '" + target + "'");
                 counterObj.failedFiles++;
             }
         }
@@ -79,6 +79,8 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
             dirs: 0
         };
 
+        if (separateDir !== "") target = path.join(path.dirname(target), separateDir);
+
         try {
             var stat = fs.statSync(target);
         } catch(error) {
@@ -86,12 +88,14 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
             return;
         }
 
+        log("Cleaning up '" + target + "'");
+
         if (stat.isFile()) {
             unlinkFile(target, counter);
             counter.dirs++;
         }
         if (stat.isDirectory()) {
-            traverseFileTree(target, recursive, unlinkFile, counter);
+            traverseFileTree(target, recursive, unlinkFile, undefined, counter, "");
         }
 
         if (!quiet) {
@@ -102,14 +106,14 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         }
     }
 
-    function instrumentFile(target) {
+    function instrumentFile(target, prefixForFile) {
         q.addJob({
             file: target, 
-            prefix: prefix
+            prefix: prefixForFile
         });
     }
 
-    function instrumentDir(dir, recursive) {
+    function instrumentDir(dir, separateDir, recursive) {
         var counter = {
             files: 0,
             failedFiles: 0,
@@ -117,25 +121,54 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
             skippedFiles: 0
         };
 
+        if (separateDir === "") separateDir = path.basename(dir);
+
         scriptWideCounter = counter;
 
-        traverseFileTree(dir, recursive, instrumentFile, counter);
+        function getSubpath(p) {
+            var portions = p.split(path.sep);
+            portions.shift();
+            return path.join.apply(path, portions);
+        }
+
+        function getTargetDir(pathTrace) {
+            return path.join(path.dirname(dir), separateDir, getSubpath(pathTrace));
+        }
+
+        function fileHandler (file, pathTrace, counterObj) {
+            var prefixForFile = path.join(path.relative(path.dirname(file), getTargetDir(pathTrace)), prefix);
+            if (prefix === "") prefixForFile += path.sep;
+            instrumentFile(file, prefixForFile);
+        }
+
+        function dirHandler(pathTrace) {
+            var targetDir = getTargetDir(pathTrace);
+            
+            if(!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir);
+            }
+        }
+
+        traverseFileTree(dir, recursive, fileHandler, dirHandler, counter, "");
 
         q.start();
     }
 
-    function traverseFileTree(dir, recursive, fileHandler, counterObj) {
+    function traverseFileTree(dir, recursive, fileHandler, dirHandler, counterObj, pathTrace) {
         counterObj.dirs++;
+
+        pathTrace = path.join(pathTrace, path.basename(dir));        
+        if (typeof dirHandler === "function") dirHandler(pathTrace);
 
         filesInDir = fs.readdirSync(dir);
         filesInDir.forEach(function(file) {
             file = path.join(dir, file);
             var stat = fs.statSync(file);
             if(stat.isDirectory() && recursive) {
-                traverseFileTree(file, recursive, fileHandler, counterObj);
+                traverseFileTree(file, recursive, fileHandler, dirHandler, counterObj, pathTrace);
             }
             if(stat.isFile()) {
-                fileHandler(file, counterObj);
+                if (typeof fileHandler === "function") fileHandler(file, pathTrace, counterObj);
             }
         });
     }

@@ -11,5 +11,5 @@ function isAlreadyInstrumentedFile(target, prefix) {
 }
 
 function isInstrumentedFile(target, prefix) {
-    return (path.basename(target).indexOf(prefix) == 0); 
+    return (path.basename(target).indexOf(path.basename(prefix)) == 0); 
 }
