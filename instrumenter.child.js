@@ -3,19 +3,14 @@ Error.stackTraceLimit = Infinity;
 var fs = require('fs');
 var path = require('path');
 var common = require(path.join(__dirname, "instrumenter.common.js"));
+var bootstrapFork = require("reusable-forks-queue").bootstrapFork;
 var blkt = require('blanket')({
     'data-cover-customVariable': 'window._$blanket'
 });
 
-process.on("message", function (msg) {
-    if (msg.message === "doThisWork") {
-        instrumentFile(msg.args.file, msg.args.prefix);
-
-        process.send("giveMeMoreWork");
-    }
+bootstrapFork(function (args) {
+    instrumentFile(args.file, args.prefix);
 });
-
-process.send("giveMeWork");
 
 function blanketInitializer(target, fileContent, done) {
     blkt.instrument({
