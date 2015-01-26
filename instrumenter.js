@@ -15,7 +15,15 @@ var common = require(path.join(__dirname, "instrumenter.common.js"));
 module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentDir  = instrumentDir;
     this.instrumentFile = instrumentFile;
+    this.instrumentSingleFile = instrumentSingleFile;
     this.cleanup = cleanup;
+
+    var counter = {
+        files: 0,
+        failedFiles: 0,
+        dirs: 0,
+        skippedFiles: 0
+    };
 
     var q = new ReusableForksQueue(path.join(__dirname, "instrumenter.child.js"), parallelism);
 
@@ -106,8 +114,13 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         }
     }
 
+    function instrumentSingleFile(target) {
+        instrumentFile(target, prefix);
+        scriptWideCounter = counter;
+        q.start();
+    }
+
     function instrumentFile(target, prefixForFile) {
-        prefixForFile = prefixForFile || prefix; //when run in filemode there is no prefixForFile
         q.addJob({
             file: target, 
             prefix: prefixForFile
@@ -115,13 +128,6 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     }
 
     function instrumentDir(dir, separateDir, recursive) {
-        var counter = {
-            files: 0,
-            failedFiles: 0,
-            dirs: 0,
-            skippedFiles: 0
-        };
-
         if (separateDir === "") separateDir = path.basename(dir);
 
         scriptWideCounter = counter;

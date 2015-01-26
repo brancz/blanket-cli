@@ -60,7 +60,7 @@ if (!program.args.length) {
             instrumenter.instrumentDir(target, program.separate, program.recursive);
         }
         if(stat.isFile()) {
-            instrumenter.instrumentFile(target);
+            instrumenter.instrumentSingleFile(target);
         }
     });
 }
