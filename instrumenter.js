@@ -10,7 +10,7 @@ var path = require('path');
 var clc = require('cli-color');
 var ReusableForksQueue = require("reusable-forks-queue").ReusableForksQueue;
 var scriptWideCounter; 
-var common = require(path.join(__dirname, "instrumenter.common.js"));
+var common = require(path.join(__dirname, "instrumenter-common.js"));
 
 module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentDir  = instrumentDir;
