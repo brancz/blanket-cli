@@ -3,11 +3,12 @@ Error.stackTraceLimit = Infinity;
 
 var program    = require('commander');
 var os         = require('os');
-var package    = require('../package.json');
-var BlanketCLI = require('../blanket-cli.js');
+var path       = require('path');
+var version    = require(path.join(__dirname, '../package.json')).version;
+var BlanketCLI = require(path.join(__dirname, '../blanket-cli.js'));
 
 program
-  .version(package.version)
+  .version(version)
   .description('Instrument javascript code for coverage analysis with blanket.js')
   .usage('[options] [target ...]')
   .option('-R, --recursive', 'Instrument a directory recursively')
@@ -28,5 +29,7 @@ if (!program.args.length) {
 
 var targets = program.args;
 var options = program;
+
+console.log(targets);
 
 new BlanketCLI(targets, options).run();
