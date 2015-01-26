@@ -25,7 +25,7 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         skippedFiles: 0
     };
 
-    var q = new ReusableForksQueue(path.join(__dirname, "instrumenter.child.js"), parallelism);
+    var q = new ReusableForksQueue(path.join(__dirname, "instrumenter-fork.js"), parallelism);
 
     q.on("jobMessage", function (msg, jobsDoneCount) {
         if (msg.state === "skipped") {
@@ -121,6 +121,8 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     }
 
     function instrumentFile(target, prefixForFile) {
+        console.log('target ' + target);
+        console.log('prefixForFile ' + target);
         q.addJob({
             file: target, 
             prefix: prefixForFile
