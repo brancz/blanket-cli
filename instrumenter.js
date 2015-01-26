@@ -59,7 +59,7 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     });
 
     function log(text) {
-        if(verbose && !quiet) console.log(text);
+        if(verbose && !quiet) console.log('info: ' + text);
     }
 
     function warn(text) {
@@ -121,8 +121,6 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     }
 
     function instrumentFile(target, prefixForFile) {
-        console.log('target ' + target);
-        console.log('prefixForFile ' + target);
         q.addJob({
             file: target, 
             prefix: prefixForFile
