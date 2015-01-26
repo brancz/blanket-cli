@@ -14,11 +14,12 @@ function blanketInitializer(target, fileContent, done) {
     }, done);
 }
 
-function send(msg) {
-    process.send(msg);
-}
+module.exports = function(target, prefix, sendCallback) {
+    function send(msg) {
+        sendCallback = sendCallback || process.send;
+        sendCallback(msg);
+    }
 
-module.exports = function(target, prefix) {
     if (common.isAlreadyInstrumentedFile(target, prefix) || common.isInstrumentedFile(target, prefix)) {
         send({
             state: "skipped",

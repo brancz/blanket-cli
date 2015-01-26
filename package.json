@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "devDependencies": {
     "chai": "^1.10.0",
-    "mocha": "^2.1.0"
+    "mocha": "^2.1.0",
+    "mock-fs": "^2.3.2"
   },
   "dependencies": {
     "blanket": "git+https://github.com/FlorianLoch/blanket.git",
@@ -12,7 +13,7 @@
     "commander": "^2.6.0"
   },
   "scripts": {
-    "start": "node cli.js"
+    "test": "mocha test/*.js"
   },
   "bin": "./bin/blanket-cli.js"
 }
