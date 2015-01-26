@@ -107,6 +107,7 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     }
 
     function instrumentFile(target, prefixForFile) {
+        prefixForFile = prefixForFile || prefix; //when run in filemode there is no prefixForFile
         q.addJob({
             file: target, 
             prefix: prefixForFile
