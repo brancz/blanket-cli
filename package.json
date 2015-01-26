@@ -1,7 +1,10 @@
 {
   "name": "blanket-cli",
   "version": "0.0.1",
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^2.1.0",
+    "should": "^4.6.1"
+  },
   "dependencies": {
     "blanket": "git+https://github.com/FlorianLoch/blanket.git",
     "reusable-forks-queue": "git+https://github.com/FlorianLoch/reusable-forks-queue.git",
@@ -11,5 +14,5 @@
   "scripts": {
     "start": "node cli.js"
   },
-  "bin": "./cli.js"
+  "bin": "./bin/blanket-cli.js"
 }
