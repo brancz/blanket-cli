@@ -19,7 +19,7 @@ program
   .option('-v, --verbose', 'Display some information on the current status')
   .option('-q, --quiet', 'Surpress warnings and log output')
   .option('-p, --parallelism <forks>', 'Spread work over n parallel processes (defaults to amount of available cpu cores)', os.cpus().length)
-  .option('--prefix [prefix]', 'The prefix to use to indicate a file is instrumented (by default "instrumented-" or empty when run with -s flag)')
+  .option('--prefix [prefix]', 'The prefix to use to indicate a file is instrumented (by default "instrumented-" or empty when run with -s flag)', DEFAULT_PREFIX)
   .option('--cleanup', 'Removes all files in the given targets starting with the given prefix');  
 
 program.parse(process.argv);
