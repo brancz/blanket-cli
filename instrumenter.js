@@ -10,7 +10,7 @@ var path = require('path');
 var clc = require('cli-color');
 var ReusableForksQueue = require("reusable-forks-queue").ReusableForksQueue;
 var scriptWideCounter; 
-var common = require(path.join(__dirname, "instrumenter.common.js"));
+var common = require(path.join(__dirname, "instrumenter-common.js"));
 
 module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentDir  = instrumentDir;
@@ -25,7 +25,7 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         skippedFiles: 0
     };
 
-    var q = new ReusableForksQueue(path.join(__dirname, "instrumenter.child.js"), parallelism);
+    var q = new ReusableForksQueue(path.join(__dirname, "instrumenter-fork.js"), parallelism);
 
     q.on("jobMessage", function (msg, jobsDoneCount) {
         if (msg.state === "skipped") {
@@ -59,7 +59,7 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     });
 
     function log(text) {
-        if(verbose && !quiet) console.log(text);
+        if(verbose && !quiet) console.log('info: ' + text);
     }
 
     function warn(text) {

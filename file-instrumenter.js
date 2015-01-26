@@ -2,14 +2,9 @@ Error.stackTraceLimit = Infinity;
 
 var fs = require('fs');
 var path = require('path');
-var common = require(path.join(__dirname, "instrumenter.common.js"));
-var bootstrapFork = require("reusable-forks-queue").bootstrapFork;
+var common = require(path.join(__dirname, "instrumenter-common.js"));
 var blkt = require('blanket')({
     'data-cover-customVariable': 'window._$blanket'
-});
-
-bootstrapFork(function (args) {
-    instrumentFile(args.file, args.prefix);
 });
 
 function blanketInitializer(target, fileContent, done) {
@@ -23,7 +18,7 @@ function send(msg) {
     process.send(msg);
 }
 
-function instrumentFile(target, prefix) {
+module.exports = function(target, prefix) {
     if (common.isAlreadyInstrumentedFile(target, prefix) || common.isInstrumentedFile(target, prefix)) {
         send({
             state: "skipped",
@@ -56,4 +51,4 @@ function instrumentFile(target, prefix) {
             error: err.toString()
         });
     }
-}
+};
