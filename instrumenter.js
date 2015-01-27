@@ -9,7 +9,6 @@ var fs = require('fs');
 var path = require('path');
 var clc = require('cli-color');
 var ReusableForksQueue = require("reusable-forks-queue").ReusableForksQueue;
-var scriptWideCounter; 
 var common = require(path.join(__dirname, "instrumenter-common.js"));
 
 module.exports = function(prefix, verbose, quiet, debug, parallelism) {
@@ -17,6 +16,9 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
     this.instrumentFile = instrumentFile;
     this.instrumentSingleFile = instrumentSingleFile;
     this.cleanup = cleanup;
+
+    var scriptWideCounter; 
+    var filesAddedToQueueCount = 0;
 
     var counter = {
         files: 0,
@@ -49,12 +51,17 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         }
     });
 
-    q.on("allJobsEnded", function (jobsDoneCount) {
-        if(!quiet) {
-            console.log();
-            console.log(clc.green("Successfully instrumented " + scriptWideCounter.files + " file(s)."));
-            console.log(clc.yellow("Skipped " + scriptWideCounter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves. They can be removed by running in --cleanup mode."));
-            console.log(clc.red("Failed instrumenting " + scriptWideCounter.failedFiles + " file(s). Probably because they were no valid JavaScript files." + ((!debug) ? " Run in debug and verbose mode (-d -v or -dv) for more details." : "")));
+    q.on("jobEnded", function (jobsDoneCount, jobsFailedCount, job, success) {
+        if (jobsDoneCount + jobsFailedCount == filesAddedToQueueCount) {
+            if(!quiet) {
+                console.log();
+                console.log(clc.green("Successfully instrumented " + scriptWideCounter.files + " file(s)."));
+                console.log(clc.yellow("Skipped " + scriptWideCounter.skippedFiles + " file(s) because they were already instrumented or were instrumented files themselves. They can be removed by running in --cleanup mode."));
+                console.log(clc.red("Failed instrumenting " + scriptWideCounter.failedFiles + " file(s). Probably because they were no valid JavaScript files." + ((!debug) ? " Run in debug and verbose mode (-d -v or -dv) for more details." : "")));
+            }
+
+            q.stop();
+            process.exit(0);
         }
     });
 
@@ -112,15 +119,17 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
                 console.log(clc.red("Could not delete " + counter.failedFiles + " file(s)."));
             }
         }
+
+        process.exit(0);
     }
 
     function instrumentSingleFile(target) {
         instrumentFile(target, prefix);
         scriptWideCounter = counter;
-        q.start();
     }
 
     function instrumentFile(target, prefixForFile) {
+        filesAddedToQueueCount++;        
         q.addJob({
             file: target, 
             prefix: prefixForFile
@@ -157,8 +166,6 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         }
 
         traverseFileTree(dir, recursive, fileHandler, dirHandler, counter, "");
-
-        q.start();
     }
 
     function traverseFileTree(dir, recursive, fileHandler, dirHandler, counterObj, pathTrace) {
