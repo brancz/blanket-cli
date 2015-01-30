@@ -9,10 +9,6 @@ instrumentation of files.
 Installation
 ------------
 
-From npm
-
-	npm install blanket-cli -g
-
 From github/development
 
 	git clone https://github.com/flower-pot/blanket-cli.git
@@ -22,6 +18,25 @@ From github/development
 
 Usage
 -----
+
+A common use case is to instrument all files in a directory and its
+subdirectories. This can be done with the following command. (assuming the
+directory is called `scripts`)
+
+	blanket-cli -r scripts
+
+This command however saves all instrumented files with the prefix
+`instrumented-`. The prefix can be overridden with the `--prefix` flag e.g.:
+
+	blanket-cli -r --prefix "other-prefix-" scripts
+
+You might want to put the instrumented scripts in a different directory than
+its origin. To accomplish that, use the `-s [dir]` flag. By default it does not
+use a prefix, only if you explicitly set one.
+
+	blanket-cli -r -s instrumented-scripts scripts
+
+If you want to know more about the usage refer to the help text.
 
 The cli is self documenting you can call the help description when needed.
 
@@ -41,4 +56,5 @@ The cli is self documenting you can call the help description when needed.
 	  -v, --verbose              Display some information on the current status
 	  -q, --quiet                Surpress warnings and log output
 	  -p, --parallelism <forks>  Spread work over n parallel processes (defaults to amount of available cpu cores)
+	  --prefix [prefix]          The prefix to use to indicate a file is instrumented (by default "instrumented-" or empty when run with -s flag)
 	  --cleanup                  Removes all files in the given targets starting with 'instrumented-'
