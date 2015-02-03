@@ -16,7 +16,8 @@ function blanketInitializer(target, fileContent, done) {
 
 module.exports = function(target, prefix, sendCallback) {
     function send(msg) {
-        sendCallback = sendCallback || process.send;
+        sendCallback = sendCallback || process.send.bind(process);
+
         sendCallback(msg);
     }
 
