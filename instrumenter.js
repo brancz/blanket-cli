@@ -11,7 +11,7 @@ var clc = require('cli-color');
 var ReusableForksQueue = require("reusable-forks-queue").ReusableForksQueue;
 var common = require(path.join(__dirname, "instrumenter-common.js"));
 
-module.exports = function(prefix, verbose, quiet, debug, parallelism) {
+module.exports = function(prefix, verbose, quiet, debug, parallelism, embedSource, trace) {
     this.instrumentDir  = instrumentDir;
     this.instrumentFile = instrumentFile;
     this.instrumentSingleFile = instrumentSingleFile;
@@ -132,7 +132,9 @@ module.exports = function(prefix, verbose, quiet, debug, parallelism) {
         filesAddedToQueueCount++;        
         q.addJob({
             file: target, 
-            prefix: prefixForFile
+            prefix: prefixForFile,
+            embedSource: embedSource,
+            trace: trace
         });
     }
 

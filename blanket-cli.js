@@ -32,8 +32,8 @@ var BlanketCLI = function(targets, options) {
                 console.log(targets);
                 printWorkingParameters(options);
             }
-            
-            var instrumenter = new Instrumenter(options.prefix, options.verbose, options.quiet, options.debug, options.parallelism);
+
+            var instrumenter = new Instrumenter(options.prefix, options.verbose, options.quiet, options.debug, options.parallelism, !options.disable_embed_source, !options.disable_trace);
 
             if (options.cleanup) {
                 instrumenter.cleanup(target, options.separate, options.recursive);

@@ -3,18 +3,26 @@ Error.stackTraceLimit = Infinity;
 var fs = require('fs');
 var path = require('path');
 var common = require(path.join(__dirname, "instrumenter-common.js"));
-var blkt = require('blanket')({
-    'data-cover-customVariable': 'window._$blanket'
-});
 
-function blanketInitializer(target, fileContent, done) {
-    blkt.instrument({
-        inputFile: fileContent,
-        inputFileName: path.basename(target)
-    }, done);
-}
+module.exports = function(target, prefix, embedSource, trace, sendCallback) { //sendCallback is needed for testing via dependency injection
+    console.log("Trace: " + trace);
+    console.log("embedSource" + embedSource);                                                                              //
+                                                                              //
+    var blkt = require('blanket')({
+        'data-cover-customVariable': 'window._$blanket',
+        'data-cover-flags': {
+            trace: trace,
+            embedSource: embedSource
+        }
+    });    
 
-module.exports = function(target, prefix, sendCallback) {
+    function blanketInitializer(target, fileContent, done) {
+        blkt.instrument({
+            inputFile: fileContent,
+            inputFileName: path.basename(target)
+        }, done);
+    }
+
     function send(msg) {
         sendCallback = sendCallback || process.send.bind(process);
 

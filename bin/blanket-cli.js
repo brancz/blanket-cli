@@ -17,6 +17,8 @@ program
   .option('-v, --verbose', 'Display some information on the current status')
   .option('-q, --quiet', 'Surpress warnings and log output')
   .option('-p, --parallelism <forks>', 'Spread work over n parallel processes (defaults to amount of available cpu cores)', os.cpus().length)
+  .option('--disable_trace', 'Disable adding code enabling tracing during/after execution. Enabled by default.')
+  .option('--disable_embed_source', 'Disable adding of the original source to the instrumented file - needed for blankets evaluation suite. Enabled by default.')
   .option('--prefix [prefix]', 'The prefix to use to indicate a file is instrumented (by default "instrumented-" or empty when run with -s flag)')
   .option('--cleanup', 'Removes all files in the given targets starting with the given prefix');  
 
