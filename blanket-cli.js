@@ -28,8 +28,11 @@ var BlanketCLI = function(targets, options) {
             if (options.separate && options.prefix === undefined) options.prefix = '';
             if (options.prefix === undefined) options.prefix = DEFAULT_PREFIX;
 
-            printWorkingParameters(options);
-
+            if (options.verbose) {
+                console.log(targets);
+                printWorkingParameters(options);
+            }
+            
             var instrumenter = new Instrumenter(options.prefix, options.verbose, options.quiet, options.debug, options.parallelism);
 
             if (options.cleanup) {

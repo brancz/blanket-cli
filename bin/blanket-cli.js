@@ -30,6 +30,4 @@ if (!program.args.length) {
 var targets = program.args;
 var options = program;
 
-console.log(targets);
-
 new BlanketCLI(targets, options).run();
