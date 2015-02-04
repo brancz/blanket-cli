@@ -42,19 +42,21 @@ The cli is self documenting you can call the help description when needed.
 
 	$ blanket-cli --help
 	
-	Usage: cli [options] [target ...]
-	
-	Instrument javascript code for coverage analysis with blanket.js
-	
-	Options:
-	
-	  -h, --help                 output usage information
-	  -V, --version              output the version number
-	  -R, --recursive            Instrument a directory recursively
-	  -s, --separate [dir]       Separate instrumented files in different subdir
-	  -d, --debug                Display time used for overall processing. If used in combination with --verbose it display time used for each file to instrument
-	  -v, --verbose              Display some information on the current status
-	  -q, --quiet                Surpress warnings and log output
-	  -p, --parallelism <forks>  Spread work over n parallel processes (defaults to amount of available cpu cores)
-	  --prefix [prefix]          The prefix to use to indicate a file is instrumented (by default "instrumented-" or empty when run with -s flag)
-	  --cleanup                  Removes all files in the given targets starting with 'instrumented-'
+	  Usage: blanket-cli [options] [target ...]
+    
+    Instrument javascript code for coverage analysis with blanket.js
+    
+    Options:
+    
+    -h, --help                 output usage information
+    -V, --version              output the version number
+    -R, --recursive            Instrument a directory recursively
+    -s, --separate [dir]       Separate instrumented files in different subdir
+    -d, --debug                Display time used for overall processing. If used in combination with --verbose it display time used for each file to instrument
+    -v, --verbose              Display some information on the current status
+    -q, --quiet                Surpress warnings and log output
+    -p, --parallelism <forks>  Spread work over n parallel processes (defaults to amount of available cpu cores)
+    --disable_trace            Disable adding code enabling tracing during/after execution. Enabled by default.
+    --disable_embed_source     Disable adding of the original source to the instrumented file - needed for blankets evaluation suite. Enabled by default.
+    --prefix [prefix]          The prefix to use to indicate a file is instrumented (by default "instrumented-" or empty when run with -s flag)
+    --cleanup                  Removes all files in the given targets starting with the given prefix
