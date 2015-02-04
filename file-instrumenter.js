@@ -5,9 +5,6 @@ var path = require('path');
 var common = require(path.join(__dirname, "instrumenter-common.js"));
 
 module.exports = function(target, prefix, embedSource, trace, sendCallback) { //sendCallback is needed for testing via dependency injection
-    console.log("Trace: " + trace);
-    console.log("embedSource" + embedSource);                                                                              //
-                                                                              //
     var blkt = require('blanket')({
         'data-cover-customVariable': 'window._$blanket',
         'data-cover-flags': {
