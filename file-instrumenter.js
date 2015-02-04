@@ -3,7 +3,7 @@ Error.stackTraceLimit = Infinity;
 var fs = require('fs');
 var path = require('path');
 var common = require(path.join(__dirname, "instrumenter-common.js"));
-var blkt = require('../blanket')({
+var blkt = require('blanket')({
     'data-cover-customVariable': 'window._$blanket'
 });
 
