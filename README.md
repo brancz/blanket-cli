@@ -2,9 +2,8 @@ blanket-cli
 ===========
 
 This cli was built to instrument large amounts of javascript files for later
-use with [blanket](http://blanketjs.org/) in a webbrowser. By default, it uses
-the amount of available cores as the amount of processes to parallelize the
-instrumentation of files.
+use with [blanket](http://blanketjs.org/) in a webbrowser. But for instrumentalization we use an enhanced [fork of blanket](https://github.com/FlorianLoch/blanket) (which uses a newer [esprima](https://github.com/FlorianLoch/blanket) release for parsing and adds functionality like adding code for tracing script execution). 
+By default, it uses the amount of available cores as the amount of processes to parallelize the instrumentation of files.
 
 Installation
 ------------
